@@ -45,6 +45,10 @@ void setup() {
 
   pinMode(readPin, INPUT);
   pinMode(saberRead, INPUT);
+
+  pinMode(lOut, OUTPUT);
+  digitalWrite(lOut, LOW); 
+   
   attachInterrupt(digitalPinToInterrupt(readPin), readISR, RISING);
   attachInterrupt(digitalPinToInterrupt(saberRead), readSaber, RISING);
   Serial.begin(115200);
@@ -65,6 +69,7 @@ void readISR() {
 }
 
 void readSaber() {
+  //sendPulse = true; 
   if (!ignoreSaberInterrupt) {
     sendPulse = true;
   }
@@ -88,8 +93,9 @@ void loop() {
   if (synchronized) {
     int t = timeStep;
 
-    Serial.println(t);
-    if (sendPulse) {
+    //Serial.println(t);
+    if (!ignoreInterrupt && digitalRead(saberRead) ) {
+      Serial.println(t); 
       ignoreInterrupt=true;
       digitalWrite(writePin, HIGH);
       sendPulse = false;
@@ -97,8 +103,9 @@ void loop() {
       digitalWrite(writePin, LOW);
       ignoreInterrupt=false;
     }
-    switch (t) {
 
+    digitalRead(saberRead); 
+    switch (t) {
       // Saber set HIGH, Lame Low
       // Saber does not read.
       case A0:
@@ -116,6 +123,7 @@ void loop() {
       // Allow saber read Interrrupt action
       // short period to
       case B1:
+       // Serial.println("in self touch"); 
         ignoreSaberInterrupt = false;
         break;
 

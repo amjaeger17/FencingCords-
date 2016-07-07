@@ -60,7 +60,7 @@ void loop() {
     } else if (currentTimeStep>=D1 && currentTimeStep<=D2) {
       Serial.println("TOUCH");
     } else {
-      Serial.println(timeStep);
+      //Serial.println(timeStep);
     }
     shouldRead = false;
   }

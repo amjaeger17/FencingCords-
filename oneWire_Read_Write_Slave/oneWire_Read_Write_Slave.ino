@@ -6,16 +6,16 @@
 #define A0  0
 
 #define B0 30
-#define B1 35
-#define B2 55
+#define B1 40
+#define B2 50
 
 #define C0 60
-#define C1 65
-#define C2 85
+#define C1 70
+#define C2 80
 
 #define D0 90
-#define D1 95
-#define D2 115
+#define D1 100
+#define D2 110
 #define D3 120
 
 #define SETUP 1
@@ -59,12 +59,13 @@ volatile bool ignoreInterrupt = false;
 volatile bool ignoreSaberInterrupt = false;
 bool sendPulse = false;
 bool hasBeenWritten = false;
-
+int timeSinceRestart = 0; 
 
 void readISR() {
   if (!ignoreInterrupt) {
     synchronized = true;
     timeStep = 0;
+    timeSinceRestart = 0; 
   }
 }
 
@@ -92,10 +93,11 @@ void readSaber() {
 void loop() {
   if (synchronized) {
     int t = timeStep;
-
+     int val = digitalRead(saberRead);
     //Serial.println(t);
-    if (!ignoreInterrupt && digitalRead(saberRead) ) {
-      Serial.println(t); 
+    if (!ignoreSaberInterrupt && 1 == val) {
+      Serial.println(t);
+       
       ignoreInterrupt=true;
       digitalWrite(writePin, HIGH);
       sendPulse = false;
@@ -164,12 +166,16 @@ void loop() {
     }
   } else {
     //unsynchronized
-    //Serial.print(".");
+    Serial.print(".");
+  }
+  if(240 < timeSinceRestart){ 
+    synchronized = false; 
   }
 }
 
 void timerISR() {
   timeStep++;
+  timeSinceRestart++; 
 }
 
 

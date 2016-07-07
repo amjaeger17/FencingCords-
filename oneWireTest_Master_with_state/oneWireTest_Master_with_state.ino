@@ -17,7 +17,7 @@
 #define D2 115
 #define D3 120 
 
-const int resetLength = 120;
+const int resetLength = 240;
 
 
 const int writePin = 13; 
@@ -60,7 +60,7 @@ void loop() {
     } else if (currentTimeStep>=D1 && currentTimeStep<=D2) {
       Serial.println("TOUCH");
     } else {
-      //Serial.println(timeStep);
+      Serial.println(timeStep);
     }
     shouldRead = false;
   }

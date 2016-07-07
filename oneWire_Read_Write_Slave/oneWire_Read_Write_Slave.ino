@@ -50,13 +50,13 @@ void setup() {
   digitalWrite(lOut, LOW); 
    
   attachInterrupt(digitalPinToInterrupt(readPin), readISR, RISING);
-  attachInterrupt(digitalPinToInterrupt(saberRead), readSaber, RISING);
+  //attachInterrupt(digitalPinToInterrupt(saberRead), readSaber, RISING);
   Serial.begin(115200);
   Serial.println("Slave V0.6 Started.");
 }
 
 volatile bool ignoreInterrupt = false;
-volatile bool ignoreSaberInterrupt = false;
+volatile bool ignoreSaber = false;
 bool sendPulse = false;
 bool hasBeenWritten = false;
 int timeSinceRestart = 0; 
@@ -69,12 +69,12 @@ void readISR() {
   }
 }
 
-void readSaber() {
-  //sendPulse = true; 
-  if (!ignoreSaberInterrupt) {
-    sendPulse = true;
-  }
-}
+//void readSaber() {
+//  //sendPulse = true; 
+//  if (!ignoreSaberInterrupt) {
+//    sendPulse = true;
+//  }
+//}
 
 
 //1 // timeStep: 0 -> A0: setup S High, L Low, disable interrupt, no writing to master
@@ -89,21 +89,34 @@ void readSaber() {
 // timeStep 95 -> D1: enable interrupts, if High, send to master
 // timeStep 115 -> D2: disable interrupts.
 // timeStep 120 -> D3: timeStep = -1;
-
+int connectionCount =0; 
 void loop() {
   if (synchronized) {
     int t = timeStep;
-     int val = digitalRead(saberRead);
-    //Serial.println(t);
-    if (!ignoreSaberInterrupt && 1 == val) {
-      Serial.println(t);
-       
-      ignoreInterrupt=true;
+    
+    if(!ignoreSaber){ 
+      int saberVal = digitalRead(saberRead);
+      //Serial.println(saberVal); 
+      //Serial.println(connectionCount); 
+      if(1 == saberVal){ 
+        if(4 > connectionCount){ 
+        connectionCount++;
+        } 
+        else{ 
+          connectionCount = 0; 
+          sendPulse = true; 
+        }
+       }
+    }
+     
+    if (!ignoreInterrupt && !ignoreSaber && sendPulse) {
+     Serial.println(t); 
+      //connectionCount = 0; 
+      ignoreSaber = true;   
       digitalWrite(writePin, HIGH);
       sendPulse = false;
       delayMicroseconds(usDelay);
       digitalWrite(writePin, LOW);
-      ignoreInterrupt=false;
     }
 
     digitalRead(saberRead); 
@@ -111,7 +124,7 @@ void loop() {
       // Saber set HIGH, Lame Low
       // Saber does not read.
       case A0:
-        ignoreSaberInterrupt = true;
+        ignoreSaber = true;
         digitalWrite(sOut, HIGH);
         digitalWrite(lOut, LOW);
         break;
@@ -126,11 +139,11 @@ void loop() {
       // short period to
       case B1:
        // Serial.println("in self touch"); 
-        ignoreSaberInterrupt = false;
+        ignoreSaber = false;
         break;
 
       case B2:
-        ignoreSaberInterrupt = true;
+        ignoreSaber = true;
         break;
 
       case C0:
@@ -139,11 +152,11 @@ void loop() {
         break;
 
       case C1:
-        ignoreSaberInterrupt = false;
+        ignoreSaber = false;
         break;
 
       case C2:
-        ignoreSaberInterrupt = true;
+        ignoreSaber = true;
         break;
 
       //    D0 operation unecessary because pin state in C0 and D0 is the same.
@@ -153,11 +166,11 @@ void loop() {
       //      break;
 
       case D1:
-        ignoreSaberInterrupt = false;
+        ignoreSaber = false;
         break;
 
       case D2:
-        ignoreSaberInterrupt = true;
+        ignoreSaber = true;
         break;
 
       case D3:

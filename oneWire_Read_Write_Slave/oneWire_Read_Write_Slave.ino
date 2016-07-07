@@ -50,7 +50,6 @@ void setup() {
   digitalWrite(lOut, LOW); 
    
   attachInterrupt(digitalPinToInterrupt(readPin), readISR, RISING);
-  //attachInterrupt(digitalPinToInterrupt(saberRead), readSaber, RISING);
   Serial.begin(115200);
   Serial.println("Slave V0.6 Started.");
 }
@@ -91,13 +90,14 @@ void readISR() {
 // timeStep 120 -> D3: timeStep = -1;
 int connectionCount =0; 
 void loop() {
+  //unsigned long startTime = micros(); 
+  
   if (synchronized) {
     int t = timeStep;
-    
+    //Serial.println(t);
+    Serial.println(timeSinceRestart);  
     if(!ignoreSaber){ 
       int saberVal = digitalRead(saberRead);
-      //Serial.println(saberVal); 
-      //Serial.println(connectionCount); 
       if(1 == saberVal){ 
         if(4 > connectionCount){ 
         connectionCount++;
@@ -109,17 +109,18 @@ void loop() {
        }
     }
      
-    if (!ignoreInterrupt && !ignoreSaber && sendPulse) {
-     Serial.println(t); 
-      //connectionCount = 0; 
+    if (!ignoreSaber && sendPulse) {  
+      ignoreInterrupt = true; 
       ignoreSaber = true;   
       digitalWrite(writePin, HIGH);
       sendPulse = false;
       delayMicroseconds(usDelay);
       digitalWrite(writePin, LOW);
+      ignoreInterrupt = false;  
+      // Serial.println(timeStep); 
     }
 
-    digitalRead(saberRead); 
+    
     switch (t) {
       // Saber set HIGH, Lame Low
       // Saber does not read.
@@ -174,6 +175,8 @@ void loop() {
         break;
 
       case D3:
+        Serial.print("t is: "); 
+        Serial.println(t); 
         timeStep = -1;
         break;
     }
@@ -184,6 +187,8 @@ void loop() {
   if(240 < timeSinceRestart){ 
     synchronized = false; 
   }
+  //unsigned long endTime = micros(); 
+  //Serial.println("what the fuck");
 }
 
 void timerISR() {

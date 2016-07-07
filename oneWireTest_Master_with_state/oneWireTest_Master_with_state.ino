@@ -18,13 +18,13 @@
 #define D3 120 
 
 const int resetLength = 240;
-
+const int cycleLength = 120; 
 
 const int writePin = 13; 
 const int readPin = 2; //on uno can only be 2 or 3
 
 volatile int timeStep = 0; 
-
+volatile int timeToReset =0; 
 int data; 
 
 void setup() {
@@ -44,6 +44,7 @@ void setup() {
 volatile bool ignoreInterrupt = false;
 volatile bool shouldRead = false;
 void readISR() {
+  shouldRead = false; 
   if (!ignoreInterrupt) {
     shouldRead = true;
   }
@@ -53,31 +54,40 @@ void loop() {
   int currentTimeStep = timeStep;
   
   if (shouldRead) {
-    if (currentTimeStep>=B1 && currentTimeStep<=B2) {
+    
+    if (B1 <= currentTimeStep && B2>currentTimeStep) {
+      Serial.println(currentTimeStep); 
       Serial.println("SELF");
-    } else if (currentTimeStep>=C1 && currentTimeStep<=C2) {
+    } else if (currentTimeStep>=C1 && currentTimeStep<C2) {
+      Serial.println(currentTimeStep);
       Serial.println("BEAT");
     } else if (currentTimeStep>=D1 && currentTimeStep<=D2) {
+      Serial.println(currentTimeStep);
       Serial.println("TOUCH");
     } else {
-      Serial.println(timeStep);
+      Serial.println(currentTimeStep);
     }
     shouldRead = false;
   }
 }
 
 void timerISR() { 
-  if (0==timeStep) {
+  if (0==timeToReset) {
     //go high
     ignoreInterrupt = true;
+    shouldRead = false; 
     digitalWrite(writePin, HIGH); 
-  } else if (3==timeStep) {
+  } else if (3==timeToReset) {
     //go low, then read every 2*timeStepSize
     digitalWrite(writePin, LOW);     
     ignoreInterrupt = false;
-  } else if (resetLength==timeStep) {
-    //timeStep = -1;
+  } else if (resetLength==timeToReset) {
     timeStep = -1;
+    timeToReset = -1;
+  }
+  if(cycleLength == timeStep){ 
+    timeStep = -1; 
   }
   timeStep++;
+  timeToReset++;
 }

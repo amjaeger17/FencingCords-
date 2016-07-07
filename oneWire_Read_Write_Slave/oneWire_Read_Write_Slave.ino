@@ -37,7 +37,7 @@ volatile int wire_State;
 int data;
 
 void setup() {
-  Timer1.initialize(10000); //(100hz);
+  Timer1.initialize(8000); //(100hz);
   Timer1.attachInterrupt(timerISR);
 
   pinMode(writePin, OUTPUT);
@@ -90,6 +90,7 @@ void readISR() {
 // timeStep 120 -> D3: timeStep = -1;
 int connectionCount =0; 
 void loop() {
+ 
   //unsigned long startTime = micros(); 
   
   if (synchronized) {
@@ -110,13 +111,17 @@ void loop() {
     }
      
     if (!ignoreSaber && sendPulse) {  
+      //noInterrupts(); 
       ignoreInterrupt = true; 
       ignoreSaber = true;   
       digitalWrite(writePin, HIGH);
       sendPulse = false;
       delayMicroseconds(usDelay);
       digitalWrite(writePin, LOW);
+      //delay(9);     
       ignoreInterrupt = false;  
+ 
+ 
       // Serial.println(timeStep); 
     }
 
@@ -184,11 +189,10 @@ void loop() {
     //unsynchronized
     Serial.print(".");
   }
-  if(240 < timeSinceRestart){ 
+  if(600 < timeSinceRestart){ 
     synchronized = false; 
   }
   //unsigned long endTime = micros(); 
-  //Serial.println("what the fuck");
 }
 
 void timerISR() {

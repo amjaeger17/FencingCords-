@@ -4,23 +4,23 @@
 
 #define A0 0
 #define A1 5
-#define A2 25
+#define A2 15
 
-#define B0 30
-#define B1 35
-#define B2 55
+#define B0 20
+#define B1 25
+#define B2 38
 
-#define C0 60
-#define C1 65
-#define C2 85
+#define C0 40
+#define C1 45
+#define C2 55
 
-#define D0 90
-#define D1 95
-#define D2 115
-#define D3 120
+#define D0 60
+#define D1 65
+#define D2 78
+#define D3 80
 
-const int resetLength = 120; //Leave these the same for the moment, but in future allows for sync to be less often
-const int cycleLength = 120;
+const int resetLength = D3; //Leave these the same for the moment, but in future allows for sync to be less often
+const int cycleLength = D3;
 
 const int writePinLeft  = 4;
 const int readPinLeft = 2; //on uno can only be 2 or 3
@@ -119,11 +119,11 @@ void timerISR() {
     ignoreInterruptLeft = false;
 
     //Reset for Right Side;
-  } else if (60 == timeToReset) {
+  } else if (C0 == timeToReset) {
     ignoreInterruptRight = true;
     shouldReadRight = false;
     digitalWrite(writePinRight, HIGH);
-  } else if (62 == timeToReset) {
+  } else if (C0+2 == timeToReset) {
     digitalWrite(writePinRight, LOW);
     ignoreInterruptRight = false;
 

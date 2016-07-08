@@ -1,22 +1,29 @@
 //Slave
 
 #include <TimerOne.h>
+#include <Wire.h> // Must include Wire library for I2C
+#include <SFE_MMA8452Q.h> // Includes the SFE_MMA8452Q library
+
+//Declaring Accelerometer:
+MMA8452Q saberAccel ;
 
 
-#define A0  0
+#define A0 0
+#define A1 7
+#define A2 13
 
-#define B0 30
-#define B1 40
-#define B2 50
+#define B0 20
+#define B1 27
+#define B2 33
 
-#define C0 60
-#define C1 70
-#define C2 80
+#define C0 40
+#define C1 47
+#define C2 53
 
-#define D0 90
-#define D1 100
-#define D2 110
-#define D3 120
+#define D0 60
+#define D1 67
+#define D2 73
+#define D3 80
 
 #define SETUP 1
 #define READ_WRITE 2
@@ -46,32 +53,35 @@ void setup() {
   pinMode(readPin, INPUT);
   pinMode(saberRead, INPUT);
 
-  pinMode(sOut, OUTPUT); 
-  digitalWrite(sOut, LOW); 
+  pinMode(sOut, OUTPUT);
+  digitalWrite(sOut, LOW);
   pinMode(lOut, OUTPUT);
-  digitalWrite(lOut, LOW); 
-   
+  digitalWrite(lOut, LOW);
+
   attachInterrupt(digitalPinToInterrupt(readPin), readISR, RISING);
+
+  saberAccel.init();
   Serial.begin(115200);
   Serial.println("Slave V0.6 Started.");
+
 }
 
 volatile bool ignoreInterrupt = false;
 volatile bool ignoreSaber = false;
-bool sendPulse = false;
+volatile bool sendPulse = false;
 bool hasBeenWritten = false;
-int timeSinceRestart = 0; 
+int timeSinceRestart = 0;
 
 void readISR() {
   if (!ignoreInterrupt) {
     synchronized = true;
     timeStep = 0;
-    timeSinceRestart = 0; 
+    timeSinceRestart = 0;
   }
 }
 
 //void readSaber() {
-//  //sendPulse = true; 
+//  //sendPulse = true;
 //  if (!ignoreSaberInterrupt) {
 //    sendPulse = true;
 //  }
@@ -90,50 +100,72 @@ void readISR() {
 // timeStep 95 -> D1: enable interrupts, if High, send to master
 // timeStep 115 -> D2: disable interrupts.
 // timeStep 120 -> D3: timeStep = -1;
-int connectionCount =0; 
+int connectionCount = 0;
 void loop() {
- 
-  //unsigned long startTime = micros(); 
-  
+
+  //unsigned long startTime = micros();
+
   if (synchronized) {
     int t = timeStep;
     //Serial.println(t);
-    Serial.println(timeSinceRestart);  
-    if(!ignoreSaber){ 
+    //Serial.println(timeSinceRestart);
+    if (!ignoreSaber) {
       int saberVal = digitalRead(saberRead);
-      if(1 == saberVal){ 
-        if(4 > connectionCount){ 
-        connectionCount++;
-        } 
-        else{ 
-          connectionCount = 0; 
-          sendPulse = true; 
+      if (1 == saberVal) {
+        if (2 > connectionCount) {
+          connectionCount++;
         }
-       }
-    }
-     
-    if (!ignoreSaber && sendPulse) {  
-      //noInterrupts(); 
-      ignoreInterrupt = true; 
-      ignoreSaber = true;   
-      digitalWrite(writePin, HIGH);
-      sendPulse = false;
-      delayMicroseconds(usDelay);
-      digitalWrite(writePin, LOW);
-      //delay(9);     
-      ignoreInterrupt = false;  
- 
- 
-      // Serial.println(timeStep); 
+        else if (t >= D1 && t <= D2) {
+          Serial.println("timeing is right") ;
+          if (saberAccel.available()) {
+            saberAccel.read();
+            Serial.println("timing is right"); 
+            //          Serial.print(saberAccel.cx, 3);
+            //          Serial.print("\t");
+            //             Serial.print(saberAccel.cy, 3);
+            //              Serial.print("\t");
+            //               Serial.print(saberAccel.cz, 3);
+            //              Serial.println("\t");
+            if (1.7 < abs(saberAccel.cx) || 1.7 < abs(saberAccel.cy) || 1.7 < abs(saberAccel.cz) ) {
+              Serial.println("Light Hit");
+              sendPulse = true;
+            }
+            else{ 
+              sendPulse = false; 
+            }
+          }
+        }
+        else {
+          connectionCount = 0;
+          sendPulse = true;
+          Serial.println("fuck you"); 
+        }
+      }
     }
 
-    
-    switch (t) {
-      // Saber set HIGH, Lame Low
-      // Saber does not read.
-      case A0:
+    if (!ignoreSaber && sendPulse) {
+      Serial.println("sending");
+        //noInterrupts();
+        ignoreInterrupt = true;
         ignoreSaber = true;
-        digitalWrite(sOut, HIGH);
+        digitalWrite(writePin, HIGH);
+        sendPulse = false;
+        delayMicroseconds(usDelay);
+        digitalWrite(writePin, LOW);
+        //delay(9);
+        ignoreInterrupt = false;
+
+
+        // Serial.println(timeStep);
+      }
+
+
+    switch (t) {
+    // Saber set HIGH, Lame Low
+    // Saber does not read.
+    case A0:
+      ignoreSaber = true;
+      digitalWrite(sOut, HIGH);
         digitalWrite(lOut, LOW);
         break;
 
@@ -146,7 +178,7 @@ void loop() {
       // Allow saber read Interrrupt action
       // short period to
       case B1:
-       // Serial.println("in self touch"); 
+        // Serial.println("in self touch");
         ignoreSaber = false;
         break;
 
@@ -182,8 +214,6 @@ void loop() {
         break;
 
       case D3:
-        Serial.print("t is: "); 
-        Serial.println(t); 
         timeStep = -1;
         break;
     }
@@ -191,15 +221,15 @@ void loop() {
     //unsynchronized
     Serial.print(".");
   }
-  if(600 < timeSinceRestart){ 
-    synchronized = false; 
+  if (600 < timeSinceRestart) {
+    synchronized = false;
   }
-  //unsigned long endTime = micros(); 
+  //unsigned long endTime = micros();
 }
 
 void timerISR() {
   timeStep++;
-  timeSinceRestart++; 
+  timeSinceRestart++;
 }
 
 

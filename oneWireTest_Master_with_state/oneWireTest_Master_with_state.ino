@@ -2,7 +2,9 @@
 
 #include <TimerOne.h> 
 
-#define A0  0 
+#define A0 0 
+#define A1 5
+#define A2 25  
 
 #define B0 30 
 #define B1 35 
@@ -17,7 +19,7 @@
 #define D2 115
 #define D3 120 
 
-const int resetLength = 120;
+const int resetLength = 120; //Leave these the same for the moment, but in future allows for sync to be less often
 const int cycleLength = 120; 
 
 const int writePin = 13; 
@@ -42,7 +44,7 @@ void setup() {
 }
 
 volatile bool ignoreInterrupt = false;
-volatile bool shouldRead = false;
+volatile bool shouldReadLeft = false;
 void readISR() {
   shouldRead = false; 
   if (!ignoreInterrupt) {
@@ -78,13 +80,10 @@ void timerISR() {
     shouldRead = false; 
     digitalWrite(writePin, HIGH); 
   } else if (3==timeToReset) {
-    //go low, then read every 2*timeStepSize
-    digitalWrite(writePin, LOW);     
-    //ignoreInterrupt = false;
-  } else if(20 == timeToReset){ 
-    ignoreInterrupt = false;  
-  }
-  else if (resetLength==timeToReset) {
+      digitalWrite(writePin, LOW);     
+      ignoreInterrupt = false;
+  
+  } else if (resetLength==timeToReset) {
     timeStep = -1;
     timeToReset = -1;
   }

@@ -46,6 +46,8 @@ void setup() {
   pinMode(readPin, INPUT);
   pinMode(saberRead, INPUT);
 
+  pinMode(sOut, OUTPUT); 
+  digitalWrite(sOut, LOW); 
   pinMode(lOut, OUTPUT);
   digitalWrite(lOut, LOW); 
    

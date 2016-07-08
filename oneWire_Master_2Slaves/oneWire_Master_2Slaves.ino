@@ -22,10 +22,10 @@
 const int resetLength = 120; //Leave these the same for the moment, but in future allows for sync to be less often
 const int cycleLength = 120;
 
-const int writePinLeft  = 13;
+const int writePinLeft  = 4;
 const int readPinLeft = 2; //on uno can only be 2 or 3
 
-const int writePinRight = 12;
+const int writePinRight = 5;
 const int readPinRight = 3;
 
 volatile int timeStep = 0;
@@ -33,7 +33,7 @@ volatile int timeToReset = 0;
 int data;
 
 void setup() {
-  Timer1.initialize(8000); //(800hz);
+  Timer1.initialize(400); //(800hz);
   Timer1.attachInterrupt(timerISR);
 
   pinMode(writePinLeft, OUTPUT);

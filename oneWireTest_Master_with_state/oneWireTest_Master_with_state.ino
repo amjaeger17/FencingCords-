@@ -30,7 +30,7 @@ volatile int timeToReset =0;
 int data; 
 
 void setup() {
- Timer1.initialize(8000); //(100hz);
+ Timer1.initialize(400); //(100hz);
  Timer1.attachInterrupt(timerISR);  
  
  pinMode(writePin, OUTPUT);

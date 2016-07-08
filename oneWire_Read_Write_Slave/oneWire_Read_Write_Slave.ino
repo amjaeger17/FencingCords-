@@ -23,11 +23,11 @@
 #define END_READ 3
 
 
-const int writePin = 13;
+const int writePin = 4;
 const int readPin = 2; //on uno can only be 2 or 3
 
-const int lOut = 5;
-const int sOut = 4;
+const int lOut = 6;
+const int sOut = 5;
 const int saberRead = 3; // can only be 2 or 3 for interrupt;
 const int usDelay = 10;
 
@@ -37,7 +37,7 @@ volatile int wire_State;
 int data;
 
 void setup() {
-  Timer1.initialize(8000); //(100hz);
+  Timer1.initialize(400); //(100hz);
   Timer1.attachInterrupt(timerISR);
 
   pinMode(writePin, OUTPUT);

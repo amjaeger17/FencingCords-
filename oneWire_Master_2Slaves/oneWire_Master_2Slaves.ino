@@ -34,7 +34,7 @@ int state =0 ;
 
 
 const int beatLockout = 30; // milliseconds
-const int hitLockOut = 300;// 120milliseconds = 12000 microseconds. isr increments 1/400 microseconds. ;
+const int hitLockOut = 300;// 120milliseconds = 12000 microseconds. isr increments once ever 400 microseconds. ;
 volatile long pastTime = 0; 
 volatile long beatLoutOutCount = 0;
 bool isBeatLockOut = false;
@@ -63,7 +63,7 @@ volatile int timeToReset = 0;
 int data;
 
 void setup() {
-  Timer1.initialize(400); //(4000hz);
+  Timer1.initialize(400); //(2.5Khz) -  isr is in microseconds;
   Timer1.attachInterrupt(timerISR);
 
   pinMode(writePinLeft, OUTPUT);

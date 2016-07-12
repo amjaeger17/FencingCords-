@@ -44,7 +44,7 @@ volatile int wire_State;
 int data;
 
 void setup() {
-  Timer1.initialize(400); //(100hz);
+  Timer1.initialize(400); //(2.5khz);
   Timer1.attachInterrupt(timerISR);
 
   pinMode(writePin, OUTPUT);
@@ -127,7 +127,7 @@ void loop() {
             //               Serial.print(saberAccel.cz, 3);
             //              Serial.println("\t");
             if (1.7 < abs(saberAccel.cx) || 1.7 < abs(saberAccel.cy) || 1.7 < abs(saberAccel.cz) ) {
-              Serial.println("Light Hit");
+              Serial.println("Heavy");
               sendPulse = true;
             }
             else{ 
@@ -138,7 +138,7 @@ void loop() {
         else {
           connectionCount = 0;
           sendPulse = true;
-          Serial.println("fuck you"); 
+          Serial.println("f*** you"); 
         }
       }
     }

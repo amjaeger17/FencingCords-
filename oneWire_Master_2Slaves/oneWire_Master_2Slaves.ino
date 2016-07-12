@@ -16,9 +16,39 @@
 
 #define D0 60
 #define D1 65
-#define D2 78
+#define D2 77
 #define D3 80
 
+
+#define WAITING 0
+#define GREEN_HIT 1
+#define RED_HIT 2
+#define BOTH_HIT 3
+
+#define GREEN_SCORE 4 
+#define RED_SCORE 5 
+#define BOTH_SCORE 6 
+#define V_PAUSE 7 
+#define RESET 8 
+int state =0 ; 
+
+
+const int beatLockout = 30; // milliseconds
+const int hitLockOut = 300;// 120milliseconds = 12000 microseconds. isr increments 1/400 microseconds. ;
+volatile long pastTime = 0; 
+volatile long beatLoutOutCount = 0;
+bool isBeatLockOut = false;
+bool redHitFirst = false;
+bool greenHitFirst = false;
+bool redHit = false;
+bool greenHit = false;
+bool greenPoint = false;
+bool redPoint = false;
+bool scoreMode = false; 
+
+const int redLight = 7;
+const int greenLight = 8;
+const int buzzer = 9;
 const int resetLength = D3; //Leave these the same for the moment, but in future allows for sync to be less often
 const int cycleLength = D3;
 
@@ -33,7 +63,7 @@ volatile int timeToReset = 0;
 int data;
 
 void setup() {
-  Timer1.initialize(400); //(800hz);
+  Timer1.initialize(400); //(4000hz);
   Timer1.attachInterrupt(timerISR);
 
   pinMode(writePinLeft, OUTPUT);
@@ -47,6 +77,16 @@ void setup() {
 
   pinMode(readPinRight, INPUT);
   attachInterrupt(digitalPinToInterrupt(readPinRight), readISRRight, RISING);
+
+  pinMode(redLight, OUTPUT);
+  digitalWrite(redLight, LOW);
+
+  pinMode(greenLight, OUTPUT);
+  digitalWrite(greenLight, LOW);
+
+  pinMode(9, OUTPUT);
+  digitalWrite(9, LOW);
+
 
   Serial.begin(115200);
   Serial.println("Master V0.6 Started.");
@@ -84,6 +124,9 @@ void loop() {
 
     } else if (currentTimeStep >= D1 && currentTimeStep <= D2) {
       Serial.println("TOUCH LEFT");
+      if(!greenHit){ 
+      greenHit = true;
+      } 
     } else {
       Serial.println(currentTimeStep);
     }
@@ -96,6 +139,10 @@ void loop() {
       Serial.println("BEAT RIGHT");
     } else if (B1 <= currentTimeStep && B2 > currentTimeStep) {
       Serial.println("TOUCH RIGHT");
+        if(!redHit){ 
+          redHit = true; 
+        }
+      
     } else if (currentTimeStep >= D1 && currentTimeStep <= D2) {
       Serial.println("SELF RIGHT");
     } else {
@@ -104,8 +151,104 @@ void loop() {
     }
     shouldReadRight = false;
   }
-}
 
+  switch (state){ 
+    case WAITING: 
+      //Serial.println("In Case Waiting"); 
+      if(redHit && greenHit){ 
+          state = BOTH_SCORE;  
+      } 
+      else if(redHit && !greenHit) { 
+        state = RED_HIT;
+        pastTime = millis(); 
+        //digitalWrite(leftLight, HIGH); 
+        
+      }
+      else if(!redHit && greenHit){
+         state = GREEN_HIT;
+         pastTime = millis();
+         Serial.println("green Score");
+        // digitalWrite(rightLight, HIGH);  
+        
+      }
+      else{ 
+        digitalWrite(greenLight, LOW);
+        digitalWrite(redLight, LOW);
+        break; 
+      }
+      break; 
+
+//--------------------------------
+     case GREEN_HIT: 
+        if(pastTime < hitLockOut){ 
+          if (redHit){ 
+            state = BOTH_SCORE;  
+          }
+        }
+        else {  
+          state = GREEN_SCORE;
+          Serial.println("going to green_score"); 
+        }
+       break; 
+
+//-------------------------------------
+      case RED_HIT: 
+        if(pastTime < hitLockOut){ 
+          if (greenHit){ 
+            state = BOTH_SCORE; 
+          }
+        }
+        else { 
+          state = RED_SCORE;
+        }
+       break;
+
+//---------------------------
+    case BOTH_SCORE:
+      digitalWrite(greenLight, HIGH);
+      digitalWrite(redLight, HIGH);
+      digitalWrite(buzzer, HIGH);
+      state = V_PAUSE;
+      pastTime =0;   
+      break; 
+      
+//---------------------------------
+    case GREEN_SCORE: 
+    Serial.println("in green score"); 
+     digitalWrite(greenLight, HIGH);
+     digitalWrite(buzzer, HIGH);
+     state = V_PAUSE;
+     pastTime =0;
+     break; 
+
+//---------------------------------
+    case RED_SCORE: 
+     digitalWrite(redLight, HIGH);
+     digitalWrite(buzzer, HIGH);
+     state = V_PAUSE;
+     pastTime =0;
+     break; 
+
+//-------------------------------
+    case V_PAUSE: 
+      if (pastTime >= 5000){ 
+        pastTime = 0; 
+        state = RESET;
+      } 
+        break; 
+//-------------------------------
+    case RESET:
+      digitalWrite(greenLight, LOW);
+      digitalWrite(redLight, LOW);
+      digitalWrite(buzzer, LOW);
+      redHit = false; 
+      greenHit = false; 
+      state = WAITING; 
+      }
+  
+   
+}
+/////////////////////////////////////////
 void timerISR() {
 
   //Reset for left side
@@ -123,7 +266,7 @@ void timerISR() {
     ignoreInterruptRight = true;
     shouldReadRight = false;
     digitalWrite(writePinRight, HIGH);
-  } else if (C0+2 == timeToReset) {
+  } else if (C0 + 2 == timeToReset) {
     digitalWrite(writePinRight, LOW);
     ignoreInterruptRight = false;
 
@@ -136,4 +279,5 @@ void timerISR() {
   }
   timeStep++;
   timeToReset++;
+  pastTime++; 
 }

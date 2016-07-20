@@ -163,7 +163,7 @@ void loop() {
         }
       else{ 
        // Serial.println(timeStep); 
-      //  Serial.println("sendPulse true"); 
+      Serial.println("bad Sync"); 
         sendPulse = false; //  true;
       }
      }

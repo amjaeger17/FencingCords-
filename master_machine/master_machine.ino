@@ -104,7 +104,7 @@ void readISRLeft() {
   shouldReadLeft = false;
   if (!ignoreInterruptLeft) {
     shouldReadLeft = true;
-    timeReceived = timeStep; 
+    //timeReceived = timeStep;   //debugging for time received 
   }
 }
 
@@ -113,7 +113,7 @@ void readISRRight() {
   shouldReadRight = false;
   if (!ignoreInterruptRight) {
     shouldReadRight = true;
-    timeReceivedRight = timeStep;
+    //timeReceivedRight = timeStep;  //debugging for time received
     
   }
 }
@@ -122,11 +122,11 @@ void loop() {
   int currentTimeStep = timeStep;
   if (shouldReadLeft) {
       
-      Serial.println(timeReceived); 
+      //Serial.println(timeReceived); 
     if (B1 <= currentTimeStep && B2 > currentTimeStep) {
-     Serial.println("SELF LEFT");
+     //Serial.println("SELF LEFT");
     } else if (currentTimeStep >= C1 && currentTimeStep < C2) {
-      Serial.println("BEAT LEFT");
+     // Serial.println("BEAT LEFT");
 
     } else if (currentTimeStep >= D1 && currentTimeStep <= D2) {
       Serial.println("TOUCH LEFT");
@@ -141,7 +141,7 @@ void loop() {
   }
   if (shouldReadRight) {
     
-    Serial.println(timeReceivedRight); 
+    //Serial.println(timeReceivedRight); 
     if (A1 <= currentTimeStep && A2 > currentTimeStep) {
       Serial.println("BEAT RIGHT");
     } else if (B1 <= currentTimeStep && B2 > currentTimeStep) {
@@ -172,13 +172,13 @@ void loop() {
       } 
       else if(redHit && !greenHit) { 
         state = RED_HIT;
-        pastTime = millis(); 
+        pastTime = 0; 
         //digitalWrite(leftLight, HIGH); 
         
       }
       else if(!redHit && greenHit){
          state = GREEN_HIT;
-         pastTime = millis();
+         pastTime = 0; 
          Serial.println("green Score");
         // digitalWrite(rightLight, HIGH);  
         

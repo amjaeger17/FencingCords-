@@ -34,7 +34,9 @@ int state =0 ;
 
 
 const int beatLockout = 30; // milliseconds
-const int hitLockOut = 300;// 120milliseconds = 12000 microseconds. isr increments once ever 400 microseconds. ;
+const int hitLockOut125 = 312;// 125milliseconds = 12500 microseconds. isr increments once ever 400 microseconds. ;
+const int hitLockOut170 = 425; // 170/0.4  
+int hitLockOut = 312; // initialize to 120 milliseconds 
 volatile long pastTime = 0; 
 volatile long beatLoutOutCount = 0;
 bool isBeatLockOut = false;
@@ -57,6 +59,8 @@ const int readPinLeft = 2; //on uno can only be 2 or 3
 
 const int writePinRight = 5;
 const int readPinRight = 3;
+
+const int lockoutTimePin = 10; 
 
 volatile int timeStep = 0;
 volatile int timeToReset = 0;
@@ -89,6 +93,7 @@ void setup() {
   pinMode(9, OUTPUT);
   digitalWrite(9, LOW);
 
+  pinMode(lockoutTimePin, INPUT_PULLUP); 
 
   Serial.begin(115200);
   Serial.println("Master V0.6 Started.");
@@ -166,6 +171,13 @@ void loop() {
 
   switch (state){ 
     case WAITING: 
+    //Serial.println(digitalRead(lockoutTimePin)); 
+      if(1 == digitalRead(lockoutTimePin)){ 
+        hitLockOut = hitLockOut125; 
+      }
+      else{ 
+        hitLockOut = hitLockOut170; 
+      }
       //Serial.println("In Case Waiting"); 
       if(redHit && greenHit){ 
           state = BOTH_SCORE;  
@@ -179,7 +191,7 @@ void loop() {
       else if(!redHit && greenHit){
          state = GREEN_HIT;
          pastTime = 0; 
-         Serial.println("green Score");
+         //Serial.println("green Score");
         // digitalWrite(rightLight, HIGH);  
         
       }
